@@ -28,6 +28,18 @@ select TAG in "${TAGS[@]}"; do
   echo "Invalid selection"
 done
 
-echo "Uploading dist/* to release $TAG ..."
-set -x
-gh release upload "$TAG" dist/* --clobber
+# Ensure tag exists on origin; push if missing.
+if ! git ls-remote --tags origin "$TAG" >/dev/null 2>&1; then
+  echo "Tag $TAG not found on origin. Pushing tag..."
+  git push origin "$TAG"
+fi
+
+echo "Publishing artifacts for $TAG ..."
+if gh release view "$TAG" >/dev/null 2>&1; then
+  set -x
+  gh release upload "$TAG" dist/* --clobber
+else
+  echo "Release not found. Creating it with assets..."
+  set -x
+  gh release create "$TAG" dist/* --notes "Automated release for $TAG"
+fi
