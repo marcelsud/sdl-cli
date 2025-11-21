@@ -1,20 +1,11 @@
 #!/usr/bin/env sh
-set -euo pipefail
+set -eu
 
 REPO="marcelsud/sdl-cli"
 INSTALL_DIR=${INSTALL_DIR:-/usr/local/bin}
 CMD=${CMD:-sdl}
 
 have() { command -v "$1" >/dev/null 2>&1; }
-
-if have curl; then
-  DL="curl -fsSL"
-elif have wget; then
-  DL="wget -qO-"
-else
-  echo "error: curl or wget required" >&2
-  exit 1
-fi
 
 OS=$(uname -s | tr '[:upper:]' '[:lower:]')
 ARCH=$(uname -m)
@@ -31,10 +22,21 @@ esac
 ASSET="sdl-cli_${OS}_${ARCH}.tar.gz"
 URL="https://github.com/${REPO}/releases/latest/download/${ASSET}"
 TMP=$(mktemp -d)
+ARCHIVE="$TMP/$ASSET"
 trap 'rm -rf "$TMP"' EXIT
 
-echo "Downloading ${URL}" >&2
-$DL "$URL" | tar -C "$TMP" -xz
+if have curl; then
+  echo "Downloading ${URL} with curl" >&2
+  curl -fL "$URL" -o "$ARCHIVE"
+elif have wget; then
+  echo "Downloading ${URL} with wget" >&2
+  wget -qO "$ARCHIVE" "$URL"
+else
+  echo "error: curl or wget required" >&2
+  exit 1
+fi
+
+tar -C "$TMP" -xz -f "$ARCHIVE"
 
 BIN="$TMP/sdl"
 if [ ! -f "$BIN" ]; then
