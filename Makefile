@@ -1,4 +1,4 @@
-NAME := sdl
+NAME := sdl-cli
 MODULE := github.com/marcelsud/sdl-cli
 
 BIN_DIR := dist
@@ -27,7 +27,11 @@ build: clean
 	@for plat in $(PLATFORMS); do \
 		OS=$${plat%%/*}; ARCH=$${plat##*/}; \
 		EXT=$$( [ "$$OS" = "windows" ] && echo ".exe" ); \
-		OUT=$(BIN_DIR)/$(NAME)-$$OS-$$ARCH$$EXT; \
-		echo "==> $$OS/$$ARCH -> $$OUT"; \
-		GOOS=$$OS GOARCH=$$ARCH go build -o $$OUT . || exit 1; \
+		UOS=$$OS; \
+		UARCH=$$( [ "$$ARCH" = "amd64" ] && echo "x86_64" || echo "arm64" ); \
+		BIN=$(BIN_DIR)/$(NAME)_$$UOS\_$$UARCH$$EXT; \
+		echo "==> $$OS/$$ARCH -> $$BIN.tar.gz"; \
+		GOOS=$$OS GOARCH=$$ARCH go build -o $(BIN_DIR)/sdl . || exit 1; \
+		tar -C $(BIN_DIR) -czf $$BIN.tar.gz sdl || exit 1; \
+		rm -f $(BIN_DIR)/sdl; \
 	done

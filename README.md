@@ -14,13 +14,17 @@ Certifique-se de que `$GOPATH/bin` esteja no `PATH`.
 Quando houver releases, baixe e instale o binário mais recente:
 ```bash
 # Linux/macOS (ajuste o sufixo conforme seu OS/CPU)
-curl -L "https://github.com/marcelsud/sdl-cli/releases/latest/download/sdl-cli_$(uname -s)_$(uname -m).tar.gz" \
+curl -L "https://github.com/marcelsud/sdl-cli/releases/latest/download/sdl-cli_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m).tar.gz" \
   | tar -xz -C /usr/local/bin sdl
 # ou
-wget -O- "https://github.com/marcelsud/sdl-cli/releases/latest/download/sdl-cli_$(uname -s)_$(uname -m).tar.gz" \
+wget -O- "https://github.com/marcelsud/sdl-cli/releases/latest/download/sdl-cli_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m).tar.gz" \
   | tar -xz -C /usr/local/bin sdl
 ```
 (Substitua caminhos se preferir outra pasta. Os assets serão publicados nas releases do repositório.)
+Ou use o instalador:
+```bash
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/marcelsud/sdl-cli/main/tools/install.sh)"
+```
 
 ## Uso
 
