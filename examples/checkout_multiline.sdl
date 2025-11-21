@@ -1,0 +1,60 @@
+package checkoutml
+
+import commons.*
+
+type OrderId = UUID
+
+type PaymentId = UUID
+
+type Order = {
+  id: OrderId
+  email: Email
+  total: Money
+}
+
+type PaymentRequest = {
+  orderId: OrderId
+  total: Money
+}
+
+type OrderCreated = {
+  orderId: OrderId
+  total: Money
+}
+
+type OrderCompleted = {
+  orderId: OrderId
+  receiptId: UUID
+}
+
+type PaymentApproved = {
+  paymentId: PaymentId
+  orderId: OrderId
+}
+
+type CheckoutError = {
+  code: String
+  message: String
+}
+
+type PaymentError = {
+  code: String
+  message: String
+}
+
+service PaymentService {
+  authorizePayment(req: PaymentRequest): PaymentApproved | PaymentError
+  capturePayment(paymentId: PaymentId): PaymentApproved | PaymentError
+}
+
+service CheckoutService {
+  processOrder(order: Order): PaymentApproved | CheckoutError
+    calls [
+      PaymentService.authorizePayment,
+      PaymentService.capturePayment
+    ]
+    emits [
+      OrderCreated,
+      OrderCompleted
+    ]
+}

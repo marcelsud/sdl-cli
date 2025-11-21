@@ -1,0 +1,5 @@
+package commons
+
+type Money = Decimal @min(0)
+
+type Email = String @pattern(".+@.+")

@@ -1,0 +1,22 @@
+# Binaries
+sdl
+sdl.exe
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Build artifacts
+*.test
+*.out
+coverage*
+*.log
+
+# Go
+bin/
+/pkg/
+
+# IDE/editor
+.vscode/
+.idea/
+.DS_Store

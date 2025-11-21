@@ -1,0 +1,189 @@
+package checkoutmany
+
+import commons.*
+
+type OrderId = UUID
+
+type PaymentId = UUID
+
+type InventoryId = UUID
+
+type ShipmentId = UUID
+
+type NotificationId = UUID
+
+type Order = {
+  /* Identificador gerado pelo sistema */
+  id: OrderId
+  // Canal de contato do comprador
+  email: Email
+  total: Money
+}
+
+type PaymentReq = {
+  /* Pedido bruto enviado para
+     autorização de pagamento */
+  orderId: OrderId
+  amount: Money
+}
+
+type PaymentReceipt = {
+  paymentId: PaymentId
+  orderId: OrderId
+  approved: Boolean
+}
+
+type PaymentApproved = {
+  paymentId: PaymentId
+  orderId: OrderId
+}
+
+type StockReserved = {
+  orderId: OrderId
+  inventoryId: InventoryId
+}
+
+type ShipmentCreated = {
+  orderId: OrderId
+  shipmentId: ShipmentId
+}
+
+type EmailSent = {
+  notificationId: NotificationId
+  to: Email
+}
+
+type LoyaltyUpdated = {
+  orderId: OrderId
+  points: Int
+}
+
+type OrderCompleted = {
+  orderId: OrderId
+}
+
+type OrderFailed = {
+  orderId: OrderId
+  reason: String
+}
+
+type OrderError = {
+  code: String
+  message: String
+}
+
+type PaymentError = {
+  code: String
+  message: String
+}
+
+type StockError = {
+  code: String
+  message: String
+}
+
+type ShipmentError = {
+  code: String
+  message: String
+}
+
+type NotificationError = {
+  code: String
+  message: String
+}
+
+type LoyaltyError = {
+  code: String
+  message: String
+}
+
+type PaidOrder = {
+  orderId: OrderId
+  paymentId: PaymentId
+}
+
+type ReservedOrder = {
+  orderId: OrderId
+  inventoryId: InventoryId
+}
+
+type ShippedOrder = {
+  orderId: OrderId
+  shipmentId: ShipmentId
+}
+
+type CheckoutSummary = {
+  orderId: OrderId
+  paymentId: PaymentId
+  inventoryId: InventoryId
+  shipmentId: ShipmentId
+}
+
+/* Serviço de pagamento.
+   Autoriza e gera recibos de pagamento.
+   Deve ser altamente disponível.
+   Eventos: PaymentApproved. */
+service PaymentService {
+  authorize(req: PaymentReq): PaymentReceipt | PaymentError -> PaymentApproved
+}
+
+/* Serviço de estoque.
+   Reserva itens após pagamento aprovado.
+   Falhas aqui impedem conclusão de pedido.
+   Eventos: StockReserved. */
+service InventoryService {
+  reserve(order: PaidOrder): InventoryId | StockError -> StockReserved
+}
+
+/*
+  Serviço de remessa.
+  Cria remessas para pedidos reservados.
+  Eventos: ShipmentCreated.
+*/
+service ShippingService {
+  createShipment(order: ReservedOrder): ShipmentId | ShipmentError -> ShipmentCreated
+}
+
+/*
+  Serviço de notificações.
+  Envia e-mails de confirmação após criação da remessa.
+  Eventos: EmailSent.
+*/
+service NotificationService {
+  sendConfirmation(order: ShippedOrder): NotificationId | NotificationError -> EmailSent
+}
+
+/*
+  Serviço de fidelidade.
+  Aplica pontos ao cliente após confirmação do pedido.
+  Eventos: LoyaltyUpdated.
+*/
+service LoyaltyService {
+  apply(order: Order): Unit | LoyaltyError -> LoyaltyUpdated
+}
+
+/*
+  Serviço de checkout.
+  Orquestra o processo de finalização do pedido.
+  Chama múltiplos serviços e emite eventos conforme o progresso.
+  Eventos: OrderCompleted, OrderFailed.
+*/
+service CheckoutService {
+  complete(order: Order): CheckoutSummary | OrderError
+    calls [
+      PaymentService.authorize,
+      InventoryService.reserve,
+      ShippingService.createShipment,
+      NotificationService.sendConfirmation,
+      LoyaltyService.apply
+    ]
+    emits [
+      PaymentApproved,
+      StockReserved,
+      ShipmentCreated,
+      EmailSent,
+      LoyaltyUpdated,
+      OrderCompleted,
+      OrderFailed
+    ]
+}

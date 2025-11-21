@@ -1,0 +1,123 @@
+package checkout
+
+import commons.*
+
+type OrderId = UUID
+
+type CartId = UUID
+
+type PaymentId = UUID
+
+type Order = {
+  id: OrderId
+  email: Email
+  total: Money
+  cartId: CartId
+  status: OrderStatus
+}
+
+type Receipt = {
+  id: UUID
+  orderId: OrderId
+  total: Money
+  status: OrderStatus
+}
+
+type PaymentRequest = {
+  orderId: OrderId
+  total: Money
+  email: Email
+}
+
+type PaymentReceipt = {
+  paymentId: PaymentId
+  orderId: OrderId
+  total: Money
+  status: PaymentStatus
+}
+
+enum OrderStatus {
+  Pending
+  Approved
+  Failed(reason: String)
+}
+
+enum PaymentStatus {
+  Pending
+  Approved
+  Declined(reason: String)
+}
+
+type OrderCreated = {
+  orderId: OrderId
+  total: Money
+  status: OrderStatus
+}
+
+type OrderCompleted = {
+  orderId: OrderId
+  receiptId: UUID
+  status: OrderStatus
+}
+
+type PaymentApproved = {
+  paymentId: PaymentId
+  orderId: OrderId
+  total: Money
+  status: PaymentStatus
+}
+
+type PaymentDeclined = {
+  paymentId: PaymentId
+  orderId: OrderId
+  reason: String
+}
+
+type OrderCancelled = {
+  orderId: OrderId
+}
+
+type EmailNotificationSent = {
+  orderId: OrderId
+  email: Email
+}
+
+type OrderCancellationError = {
+  code: String
+  message: String
+}
+
+type CheckoutError = {
+  code: String
+  message: String
+}
+
+type PaymentError = {
+  code: String
+  message: String
+}
+
+service PaymentService {
+  authorizePayment(request: PaymentRequest): PaymentReceipt | PaymentError
+    -> [
+      PaymentApproved,
+      PaymentDeclined
+    ]
+  capturePayment(paymentId: PaymentId): PaymentReceipt | PaymentError -> PaymentApproved
+}
+
+service CheckoutService {
+  processOrder(order: Order): Receipt | CheckoutError
+    calls [
+      PaymentService.authorizePayment
+    ]
+    emits [
+      OrderCreated,
+      OrderCompleted
+    ]
+  cancelOrder(orderId: OrderId): Unit | OrderCancellationError -> OrderCancelled
+}
+
+service EmailNotificationService {
+  onPaymentApproved(event: PaymentApproved): Unit -> EmailNotificationSent
+}
