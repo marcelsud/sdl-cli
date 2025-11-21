@@ -29,5 +29,5 @@ build: clean
 		EXT=$$( [ "$$OS" = "windows" ] && echo ".exe" ); \
 		OUT=$(BIN_DIR)/$(NAME)-$$OS-$$ARCH$$EXT; \
 		echo "==> $$OS/$$ARCH -> $$OUT"; \
-		GOOS=$$OS GOARCH=$$ARCH go build -o $$OUT ./... || exit 1; \
+		GOOS=$$OS GOARCH=$$ARCH go build -o $$OUT . || exit 1; \
 	done

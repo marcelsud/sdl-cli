@@ -11,6 +11,7 @@ sdl.exe
 *.out
 coverage*
 *.log
+dist/
 
 # Go
 bin/
