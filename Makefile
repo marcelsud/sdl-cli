@@ -9,9 +9,12 @@ PLATFORMS := \
 	darwin/arm64 \
 	windows/amd64
 
-.PHONY: all build clean fmt test
+.PHONY: all build clean fmt test release
 
 all: build
+
+release: build
+	@./tools/deploy-artifacts.sh
 
 fmt:
 	go fmt ./...
